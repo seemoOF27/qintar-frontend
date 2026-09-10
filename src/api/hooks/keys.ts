@@ -24,6 +24,10 @@ export const keys = {
   statistics: (params: Record<string, unknown>) => ['statistics', params] as const,
   auditLogs: (filters: Record<string, unknown> = {}) => ['audit-logs', filters] as const,
 
+  privacy: ['privacy'] as const,
+  consentText: (type: string) => ['consent-text', type] as const,
+  impersonationRequests: ['impersonation-requests'] as const,
+
   parseRequest: (id: number) => ['parse-requests', id] as const,
   categorySuggestion: (merchant: string) => ['suggest-category', merchant] as const,
 }

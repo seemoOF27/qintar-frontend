@@ -247,3 +247,53 @@ export interface CategorySuggestion {
   category_id: number
   confidence: number
 }
+
+export interface ConsentState {
+  granted: boolean
+  version: string
+  granted_at: string | null
+}
+
+export type ConsentStatusMap = Record<string, ConsentState>
+
+export interface EgressEvent {
+  purpose: string
+  destination: string
+  occurred_at: string
+}
+
+/**
+ * لوحة الخصوصية.
+ *
+ * `data_egress.ever` تُقال صراحةً: الصمت في هذا الموضع يُقرأ شكًّا.
+ */
+export interface PrivacyDashboard {
+  consents: ConsentStatusMap
+  data_egress: {
+    ever: boolean
+    last: EgressEvent | null
+    per_purpose: Record<string, EgressEvent>
+  }
+  backup: { password_set: boolean; last_sent_at: string | null }
+  deletion: { requested_at: string | null; scheduled_for: string | null }
+  activity: {
+    action: string
+    entity: string
+    fields: string[]
+    is_impersonated: boolean
+    at: string
+  }[]
+}
+
+export interface ImpersonationRequest {
+  id: number
+  status: 'pending' | 'approved' | 'rejected' | 'expired' | 'completed'
+  reason: string
+  requested_by: string | null
+  requested_at: string
+  response_deadline: string
+  responded_at: string | null
+  session_started_at: string | null
+  session_ended_at: string | null
+  can_be_entered: boolean
+}

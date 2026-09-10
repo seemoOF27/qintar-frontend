@@ -132,3 +132,41 @@ describe('نصوص الموافقة مطابقة للخلفية', () => {
     }
   })
 })
+
+describe('الأسرار لا تُخزَّن في المتصفح', () => {
+  /**
+   * كلمة مرور التصدير **لحظية**: تُكتب وتُستعمل وتُنسى.
+   *
+   * قرارك في §١٥ من 0005 يقوم على أن التصدير اليدوي لا يخزّن شيئًا. تخزينها
+   * في المتصفح «تسهيلًا» يبطل ذلك بلا أن يظهر في أي شاشة.
+   */
+  it('لا كلمة مرور تُكتب في localStorage ولا sessionStorage', () => {
+    const offences: string[] = []
+
+    for (const file of sourceFiles()) {
+      const lines = readFileSync(file, 'utf8').split('\n')
+
+      lines.forEach((line, index) => {
+        if (/^\s*(\*|\/\/)/.test(line)) return
+
+        if (/(local|session)Storage\.setItem\([^)]*[Pp]assword/.test(line)) {
+          offences.push(`${file}:${index + 1}`)
+        }
+      })
+    }
+
+    expect(offences, `كلمة مرور مخزَّنة في المتصفح:\n${offences.join('\n')}`).toEqual([])
+  })
+})
+
+describe('سحب الموافقة بنفس سهولة منحها', () => {
+  /**
+   * `compliance/consent-model.md`: «لا يُطلب سبب، ولا تُعرض شاشة إقناع، ولا
+   * يُصعَّب المسار». وأشهر صور التصعيب `confirm()` على الإيقاف وحده.
+   */
+  it('لا نافذة تأكيد في شاشة الخصوصية', () => {
+    const source = readFileSync('src/screens/PrivacyScreen.tsx', 'utf8')
+
+    expect(source).not.toMatch(/window\.confirm|\bconfirm\(/)
+  })
+})

@@ -14,6 +14,7 @@ import { DebtsScreen } from '@/screens/DebtsScreen'
 import { FundsScreen } from '@/screens/FundsScreen'
 import { AddExpenseScreen } from '@/screens/AddExpenseScreen'
 import { AuditLogScreen } from '@/screens/AuditLogScreen'
+import { PrivacyScreen } from '@/screens/PrivacyScreen'
 import { SettingsScreen } from '@/screens/SettingsScreen'
 import { ContactScreen } from '@/screens/ContactScreen'
 
@@ -53,6 +54,7 @@ export function App() {
         <Route path="/add" element={<AddExpenseScreen />} />
         <Route path="/audit" element={<AuditLogScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
+        <Route path="/privacy" element={<PrivacyScreen />} />
         <Route path="/contact" element={<ContactScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
