@@ -37,6 +37,13 @@ export class ApiError extends Error {
     return typeof value === 'string' ? value : null
   }
 
+  /** البديل اليدوي عن غرض ممنوع — الخادم يرسله مع كل رفض موافقة. */
+  get consentFallback(): string | null {
+    const value = this.errors?.fallback
+
+    return typeof value === 'string' ? value : null
+  }
+
   fieldError(field: string): string | undefined {
     return this.errors?.[field]?.[0]
   }
@@ -114,10 +121,48 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return envelope
 }
 
+/**
+ * رفع ملف — `multipart` لا JSON.
+ *
+ * **بلا `Content-Type` يدوي:** المتصفح وحده يعرف الفاصل الذي ولّده، وكتابته
+ * يدويًا تُنتج جسمًا لا يستطيع الخادم تفكيكه.
+ */
+export async function upload<T>(path: string, field: string, file: File): Promise<ApiEnvelope<T>> {
+  const token = getToken()
+  const form = new FormData()
+  form.append(field, file)
+
+  const response = await fetch(buildUrl(path), {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
+    },
+    body: form,
+  })
+
+  let envelope: ApiEnvelope<T>
+
+  try {
+    envelope = (await response.json()) as ApiEnvelope<T>
+  } catch {
+    throw new ApiError('تعذّر الاتصال بالخادم.', response.status)
+  }
+
+  if (!response.ok || envelope.success === false) {
+    if (response.status === 401) setToken(null)
+
+    throw new ApiError(envelope.message ?? 'صار خطأ.', response.status, envelope.errors)
+  }
+
+  return envelope
+}
+
 export const api = {
   get: <T>(path: string, query?: RequestOptions['query']) => request<T>(path, { query }),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body }),
   put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  upload,
 }

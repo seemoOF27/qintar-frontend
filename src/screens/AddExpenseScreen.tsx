@@ -4,6 +4,8 @@ import { useBudgets, useCommitments, usePiggyBanks } from '@/api/hooks/useMoneyR
 import { useCards, useSaveTransaction, useTags } from '@/api/hooks/useLedger'
 import { useDraftSync } from '@/lib/offline/useDraftSync'
 import { ApiError } from '@/api/client'
+import { useCategorySuggestion } from '@/api/hooks/useParsing'
+import { SmartInput } from '@/components/SmartInput'
 import { Button, Card, Field, Input, MoneyInput, Notice, Select } from '@/components/ui/Primitives'
 
 /**
@@ -12,7 +14,8 @@ import { Button, Card, Field, Input, MoneyInput, Notice, Select } from '@/compon
  * القسم ٥.٥: كل مسارات الإدخال الثلاثة تنتهي هنا قبل الحفظ. ولا حفظ مباشر
  * من مصدر آلي بلا تأكيد المستخدم.
  *
- * وثلاث قواعد مرئية في هذه الشاشة:
+ * وأربع قواعد مرئية في هذه الشاشة:
+ * - **ما يعود من التحليل يملأ الحقول ولا يحفظ** — والتأكيد على المستخدم.
  * - **البطاقة اختيارية دائمًا** ولا تمنع الحفظ.
  * - **الوسوم لا تُورَّث من الميزانية** — تُختار هنا صراحةً.
  * - بلا إنترنت تُحفظ **مسودة** لا تدخل في أي رقم حتى تُزامَن.
@@ -37,6 +40,11 @@ export function AddExpenseScreen() {
   const [selectedTags, setSelectedTags] = useState<number[]>([])
   const [notice, setNotice] = useState<string | null>(null)
 
+  // **اقتراح يُعرض ولا يُطبَّق** — القسم ٥.٤. المستخدم هو من يضغط «طبّقه».
+  const { data: suggestion } = useCategorySuggestion(merchant)
+  const suggestionApplies =
+    suggestion != null && (categoryType !== suggestion.category_type || Number(categoryId) !== suggestion.category_id)
+
   const error = save.error instanceof ApiError ? save.error : null
   const failedDrafts = drafts.filter((draft) => draft.lastError !== undefined)
 
@@ -55,6 +63,22 @@ export function AddExpenseScreen() {
   return (
     <div className="flex flex-col gap-[var(--space-4)]">
       <h1 className="text-[length:var(--text-title)] font-semibold">إضافة مصروف</h1>
+
+      {/*
+        المسار الذكي فوق الفورم لا بدلًا منه: نتيجته تملأ نفس الحقول، ويبقى
+        الإدخال اليدوي يعمل كاملًا بلا موافقة — القاعدة الخامسة.
+      */}
+      <SmartInput
+        onExtract={(result) => {
+          if (result.amount !== null) setAmount(result.amount)
+          if (result.merchant_name !== null) setMerchant(result.merchant_name)
+          if (result.spent_at !== null) setSpentAt(result.spent_at)
+
+          // **البطاقة لا تُسنَد صامتة عند الشك** — القاعدة السادسة. آخر أربعة
+          // أرقام قد تطابق أكثر من بطاقة، فتُترك للمستخدم.
+          setNotice('راجع الحقول قبل الحفظ. ما انحفظ شي لين الآن.')
+        }}
+      />
 
       {failedDrafts.length > 0 && (
         <Notice tone="danger">
@@ -123,6 +147,24 @@ export function AddExpenseScreen() {
           <Field label="تاريخ الصرف" hint="لو تركته فهو اليوم">
             <Input type="date" value={spentAt} onChange={(e) => setSpentAt(e.target.value)} />
           </Field>
+
+          {suggestionApplies && (
+            <Notice tone="info">
+              <div className="flex items-center justify-between gap-[var(--space-2)]">
+                <span>آخر مرة صنّفت «{merchant}» على باب ثاني. تبيه؟</span>
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => {
+                    setCategoryType(suggestion.category_type)
+                    setCategoryId(String(suggestion.category_id))
+                  }}
+                >
+                  طبّقه
+                </button>
+              </div>
+            </Notice>
+          )}
 
           <Field label="على أي باب؟" hint="اختياري">
             <Select

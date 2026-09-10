@@ -216,3 +216,34 @@ export interface AuditEntry {
   is_impersonated: boolean
   created_at: string
 }
+
+/**
+ * طلب تحليل رسالة أو فاتورة.
+ *
+ * **`result` مسودة لا عملية**: `requires_review` صحيح دائمًا، والحفظ لا يتم
+ * إلا بتأكيد المستخدم في فورم المراجعة — القسم ٥.٥.
+ */
+export interface ParseRequest {
+  id: number
+  status: 'queued' | 'processing' | 'completed' | 'failed'
+  input_method: 'bank_sms' | 'receipt_photo'
+  result: {
+    amount: Money | null
+    merchant_name: string | null
+    spent_at: string | null
+    card_last_four: string | null
+    currency: string | null
+    confidence: number
+    provider: string | null
+    requires_review: true
+  } | null
+  provider: string | null
+  failure_reason: string | null
+  completed_at: string | null
+}
+
+export interface CategorySuggestion {
+  category_type: 'budget' | 'commitment' | 'piggybank'
+  category_id: number
+  confidence: number
+}
