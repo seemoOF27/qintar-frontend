@@ -1,0 +1,65 @@
+/* مولَّد من shared/design-tokens.json — لا تعدّله يدويًا. */
+@import 'tailwindcss';
+
+@theme {
+  --color-brand-primary: #1F6F5C;
+  --color-brand-primaryMuted: #2E8570;
+  --color-brand-accent: #C8A45C;
+  --color-surface-page: #FBFBF9;
+  --color-surface-raised: #FFFFFF;
+  --color-surface-sunken: #F2F2EE;
+  --color-surface-border: #E3E3DC;
+  --color-ink-strong: #16211E;
+  --color-ink-base: #3C4643;
+  --color-ink-muted: #6E7873;
+  --color-ink-inverse: #FFFFFF;
+  --color-state-positive: #1F6F5C;
+  --color-state-warning: #B0791E;
+  --color-state-danger: #A33A31;
+  --color-state-info: #2C5C8A;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+  --text-caption: 13px;
+  --text-body: 16px;
+  --text-title: 20px;
+  --text-display: 28px;
+  --text-figure: 34px;
+  --touch-min: 44px;
+  --shadow-raised: 0 1px 2px rgba(22,33,30,0.06), 0 4px 12px rgba(22,33,30,0.05);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface-page);
+  color: var(--color-ink-base);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Naskh Arabic', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* الجوال أولًا: لا حقل إدخال دون 16px، وإلا كبّره iOS تلقائيًا عند التركيز. */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  font-size: max(16px, 1rem);
+}
