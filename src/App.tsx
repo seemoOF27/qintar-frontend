@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useMe } from '@/api/hooks/useAuth'
 import { AppShell } from '@/components/AppShell'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { LoginScreen } from '@/screens/LoginScreen'
 import { RegisterScreen } from '@/screens/RegisterScreen'
 import { VerifyEmailScreen } from '@/screens/VerifyEmailScreen'
@@ -42,22 +44,30 @@ export function App() {
 
   return (
     <AppShell>
-      <Routes>
-        <Route path="/" element={<DashboardScreen />} />
-        <Route path="/budgets" element={<BudgetsScreen />} />
-        <Route path="/commitments" element={<CommitmentsScreen />} />
-        <Route path="/piggy-banks" element={<PiggyBanksScreen />} />
-        <Route path="/statistics" element={<StatisticsScreen />} />
-        <Route path="/cycles" element={<CyclesScreen />} />
-        <Route path="/debts" element={<DebtsScreen />} />
-        <Route path="/funds" element={<FundsScreen />} />
-        <Route path="/add" element={<AddExpenseScreen />} />
-        <Route path="/audit" element={<AuditLogScreen />} />
-        <Route path="/settings" element={<SettingsScreen />} />
-        <Route path="/privacy" element={<PrivacyScreen />} />
-        <Route path="/contact" element={<ContactScreen />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <UpdatePrompt />
+
+      {/*
+        حدُّ الأعطال داخل الهيكل لا حوله: انكسارُ شاشة يترك التنقّل يعمل،
+        فيخرج المستخدم منها بدل أن يجد التطبيق كله أبيض.
+      */}
+      <ErrorBoundary screen="App">
+        <Routes>
+          <Route path="/" element={<DashboardScreen />} />
+          <Route path="/budgets" element={<BudgetsScreen />} />
+          <Route path="/commitments" element={<CommitmentsScreen />} />
+          <Route path="/piggy-banks" element={<PiggyBanksScreen />} />
+          <Route path="/statistics" element={<StatisticsScreen />} />
+          <Route path="/cycles" element={<CyclesScreen />} />
+          <Route path="/debts" element={<DebtsScreen />} />
+          <Route path="/funds" element={<FundsScreen />} />
+          <Route path="/add" element={<AddExpenseScreen />} />
+          <Route path="/audit" element={<AuditLogScreen />} />
+          <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/privacy" element={<PrivacyScreen />} />
+          <Route path="/contact" element={<ContactScreen />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
     </AppShell>
   )
 }

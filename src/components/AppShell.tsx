@@ -31,7 +31,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-[color:var(--color-surface-page)]">
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-[var(--space-3)] border-b border-[color:var(--color-surface-border)] bg-[color:var(--color-surface-raised)] px-[var(--space-4)] py-[var(--space-2)]">
+      {/*
+        `pt-[env(safe-area-inset-top)]` لازم: الصفحة تعمل بشريط حالة شفاف على
+        iOS بعد التثبيت، فبدونه ينزلق الرأس تحت الساعة والبطارية.
+      */}
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-[var(--space-3)] border-b border-[color:var(--color-surface-border)] bg-[color:var(--color-surface-raised)] px-[var(--space-4)] py-[var(--space-2)] pt-[calc(var(--space-2)+env(safe-area-inset-top))]">
         <span className="text-[length:var(--text-title)] font-semibold text-[color:var(--color-brand-primary)]">
           قنطار
         </span>

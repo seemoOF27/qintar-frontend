@@ -1,13 +1,48 @@
 <!doctype html>
-<html lang="en">
+<!--
+  عربي وRTL من الجذر لا بـCSS: المتصفح يحتاجهما قبل أن يُحمَّل أي نص.
+-->
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+
+    <!--
+      `viewport-fit=cover` مع `env(safe-area-inset-*)` في الأنماط: بدونه
+      يختفي شريط التنقّل خلف شريط الإيماءة في الآيفون.
+      و`user-scalable` غير معطّل: تعطيل التكبير يمنع من يحتاجه.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>قنطار</title>
+    <meta name="description" content="راتبك وميزانياتك ومصروفاتك في مكان واحد." />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>web-scaffold</title>
+
+    <!--
+      iOS يتجاهل أيقونات الـmanifest ويقرأ هذا وحده. وPNG مصمت بلا شفافية:
+      الشفاف يظهر أسود على الشاشة الرئيسية.
+    -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <meta name="theme-color" content="#1F6F5C" />
+
+    <!--
+      `apple-mobile-web-app-capable` هو ما يجعل iOS يفتحه بلا شريط عنوان
+      بعد إضافته للشاشة الرئيسية. و`black-translucent` يمدّ الخلفية تحت
+      شريط الحالة، فيلزمه `safe-area-inset-top` في الأنماط.
+    -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="قنطار" />
+
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- **لا فهرسة**: تطبيق خاص، لا صفحة تُبحث. -->
+    <meta name="robots" content="noindex, nofollow" />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>قنطار يحتاج جافاسكربت ليعمل.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

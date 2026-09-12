@@ -1,3 +1,4 @@
+import { InstallPrompt } from '@/components/InstallPrompt'
 import { Link } from 'react-router-dom'
 import { useActiveCycle, useBudgets, useCommitments } from '@/api/hooks/useMoneyResources'
 import { useStatistics } from '@/api/hooks/useLedger'
@@ -35,6 +36,9 @@ export function DashboardScreen() {
 
   return (
     <div className="flex flex-col gap-[var(--space-4)]">
+      {/* يظهر مرة، ومن رفضه لا يُسأل ثانية — والزر يبقى في الإعدادات. */}
+      <InstallPrompt />
+
       <Card>
         <p className="text-[length:var(--text-caption)] text-[color:var(--color-ink-muted)]">
           المتبقي من الرحلة

@@ -4,6 +4,7 @@ import { useCards, useDeleteCard, useSaveCard, useTags } from '@/api/hooks/useLe
 import { useState } from 'react'
 import { Button, Card, Field, Input, Notice } from '@/components/ui/Primitives'
 import { ApiError } from '@/api/client'
+import { InstallPrompt } from '@/components/InstallPrompt'
 
 const links = [
   { to: '/cycles', label: 'رحلات الرواتب' },
@@ -43,6 +44,9 @@ export function SettingsScreen() {
           {user?.email}
         </p>
       </Card>
+
+      {/* `always` عشان من رفض الشريط في الرئيسية يلقى الزر هنا وقت ما يبيه. */}
+      <InstallPrompt always />
 
       <nav className="flex flex-col gap-[var(--space-2)]">
         {links.map((link) => (

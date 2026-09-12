@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -168,5 +168,98 @@ describe('سحب الموافقة بنفس سهولة منحها', () => {
     const source = readFileSync('src/screens/PrivacyScreen.tsx', 'utf8')
 
     expect(source).not.toMatch(/window\.confirm|\bconfirm\(/)
+  })
+})
+
+describe('تقارير الأعطال لا تحمل بيانات', () => {
+  /**
+   * حدُّ الأعطال يرسل **صنف الخطأ واسم الشاشة** لا غير.
+   *
+   * `error.message` قد تحمل مبلغًا، و`componentStack` يحمل شجرة المكوّنات
+   * بخصائصها. والخادم يرفض ما عدا الحقلين أصلًا، وهذا الحارس يمسك المحاولة
+   * قبل أن تصل إليه.
+   */
+  it('حدّ الأعطال لا يرسل رسالة ولا أثر مكدس', () => {
+    const source = readFileSync('src/components/ErrorBoundary.tsx', 'utf8')
+
+    // التعليقات تُطرح: الشرح يذكر الحقول الممنوعة ليقول لماذا مُنعت.
+    const sending = source
+      .slice(source.indexOf('componentDidCatch'), source.indexOf('render()'))
+      .split('\n')
+      .filter((line) => !/^\s*(\*|\/\/)/.test(line))
+      .join('\n')
+
+    expect(sending).not.toMatch(/error\.message/)
+    expect(sending).not.toMatch(/error\.stack/)
+    expect(sending).not.toMatch(/componentStack/)
+    expect(sending).toMatch(/error\.name/)
+  })
+
+  it('ولا تقرير يذهب لغير خادمنا', () => {
+    const offences: string[] = []
+
+    for (const file of sourceFiles()) {
+      const lines = readFileSync(file, 'utf8').split('\n')
+
+      lines.forEach((line, index) => {
+        if (/^\s*(\*|\/\/)/.test(line)) return
+
+        // كل نداء شبكة يمر بـ`api` أو بمسار نسبي تحت /api/v1.
+        if (/fetch\(\s*['"`]https?:\/\//.test(line)) offences.push(`${file}:${index + 1}`)
+      })
+    }
+
+    expect(offences, `نداء شبكة لعنوان خارجي:\n${offences.join('\n')}`).toEqual([])
+  })
+})
+
+describe('التطبيق قابل للتثبيت', () => {
+  const config = readFileSync('vite.config.ts', 'utf8')
+  const html = readFileSync('index.html', 'utf8')
+
+  /**
+   * **لا استجابة API في الكاش.**
+   *
+   * رصيدٌ قديم يُعرض كأنه اليوم أخطر من رصيد لا يُعرض: من لا يرى رقمًا يعرف
+   * أنه لا يرى، ومن يرى رقمًا قديمًا يبني عليه قرارًا.
+   */
+  it('مسارات API خارج التخزين المؤقت', () => {
+    expect(config).toMatch(/navigateFallbackDenylist/)
+    expect(config).toMatch(/NetworkOnly/)
+    expect(config).toMatch(/\/api\//)
+  })
+
+  /** iOS يتجاهل أيقونات الـmanifest ويقرأ هذا الوسم وحده. */
+  it('أيقونة iOS موجودة وPNG لا SVG', () => {
+    expect(html).toMatch(/rel="apple-touch-icon"[^>]*\.png/)
+    expect(existsSync('public/icons/apple-touch-icon.png')).toBe(true)
+  })
+
+  /** بلا هذا الوسم يفتح iOS التطبيق بشريط عنوان كأنه صفحة. */
+  it('وسم فتح التطبيق بلا شريط متصفح موجود', () => {
+    expect(html).toMatch(/name="apple-mobile-web-app-capable"\s+content="yes"/)
+  })
+
+  /** قناع أندرويد يقصّ الدائرة، فيلزم أيقونة بمنطقة آمنة. */
+  it('أيقونة maskable موجودة', () => {
+    expect(config).toMatch(/purpose:\s*'maskable'/)
+    expect(existsSync('public/icons/icon-maskable-512.png')).toBe(true)
+  })
+
+  /** الصفحة عربية RTL من الجذر لا بـCSS. */
+  it('الجذر عربي واتجاهه من اليمين', () => {
+    expect(html).toMatch(/<html lang="ar" dir="rtl">/)
+  })
+
+  /** `viewport-fit=cover` مع الحواف الآمنة، وإلا اختفى التنقّل خلف الإيماءة. */
+  it('الشاشة تمتد تحت الحواف الآمنة', () => {
+    expect(html).toMatch(/viewport-fit=cover/)
+    expect(readFileSync('src/components/AppShell.tsx', 'utf8')).toMatch(/safe-area-inset-top/)
+    expect(readFileSync('src/components/AppShell.tsx', 'utf8')).toMatch(/safe-area-inset-bottom/)
+  })
+
+  /** التكبير لا يُعطَّل: تعطيله يمنع من يحتاجه. */
+  it('تكبير الصفحة غير معطَّل', () => {
+    expect(html).not.toMatch(/user-scalable\s*=\s*no|maximum-scale\s*=\s*1/)
   })
 })
