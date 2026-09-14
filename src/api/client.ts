@@ -1,4 +1,5 @@
 import type { ApiEnvelope } from './types'
+import { supportSession } from '@/lib/supportSession'
 
 /**
  * طبقة استهلاك الـAPI.
@@ -44,12 +45,31 @@ export class ApiError extends Error {
     return typeof value === 'string' ? value : null
   }
 
+  /**
+   * تغيّرت السياسة تغييرًا جوهريًّا ولم يقبل بعد.
+   *
+   * يُقرأ من جسم الرد لا من الحالة وحدها: ٤٠٣ تعني أيضًا صلاحية ناقصة أو
+   * حسابًا مجمَّدًا، ولكلٍّ شاشته.
+   */
+  get policyAcceptanceRequired(): boolean {
+    return (this.errors as Record<string, unknown> | null)?.policy_acceptance_required === true
+  }
+
   fieldError(field: string): string | undefined {
     return this.errors?.[field]?.[0]
   }
 }
 
+/**
+ * الرمز المستعمل في الطلب.
+ *
+ * **رمز جلسة الدعم أولًا** إن وُجد في هذا التبويب. وإلا رمز الحساب.
+ */
 export function getToken(): string | null {
+  const support = supportSession.token()
+
+  if (support !== null) return support
+
   try {
     return localStorage.getItem(TOKEN_KEY)
   } catch {
@@ -90,6 +110,22 @@ function buildUrl(path: string, query?: RequestOptions['query']): string {
   return url.pathname + url.search
 }
 
+/**
+ * رمزٌ رفضه الخادم.
+ *
+ * في جلسة دعم يُمحى **رمز الجلسة وحده**: محو `localStorage` هنا يُخرج موظف
+ * الدعم من حسابه الشخصي في تبويباته الأخرى.
+ */
+function forgetRejectedToken(): void {
+  if (supportSession.isActive()) {
+    supportSession.clear()
+
+    return
+  }
+
+  setToken(null)
+}
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<ApiEnvelope<T>> {
   const token = getToken()
 
@@ -113,7 +149,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (!response.ok || envelope.success === false) {
-    if (response.status === 401) setToken(null)
+    if (response.status === 401) forgetRejectedToken()
 
     throw new ApiError(envelope.message ?? 'صار خطأ.', response.status, envelope.errors)
   }
@@ -150,7 +186,7 @@ export async function upload<T>(path: string, field: string, file: File): Promis
   }
 
   if (!response.ok || envelope.success === false) {
-    if (response.status === 401) setToken(null)
+    if (response.status === 401) forgetRejectedToken()
 
     throw new ApiError(envelope.message ?? 'صار خطأ.', response.status, envelope.errors)
   }

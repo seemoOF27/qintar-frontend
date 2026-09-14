@@ -80,3 +80,15 @@ const formatter = new Intl.NumberFormat('ar-SA', {
 export function formatMoney(amount: string): string {
   return formatter.format(Number(amount))
 }
+
+/**
+ * عرض رقم خرج من محرك الكاش باك.
+ *
+ * **المحرك يحسب بأعداد لا بنصوص** — منسوخ من منصة البطاقات ولا يُعدَّل
+ * (`0003`)، والعقد يعطيه الصرف `number`. فناتجه يُقرَّب إلى الهللة مرة واحدة
+ * هنا، ثم يمر بطبقة المال نفسها. ولا يُجمع ناتجان منه خارج المحرك: الجمع
+ * بالأعداد العائمة هو ما حُذف من بقية التطبيق.
+ */
+export function formatEngineAmount(value: number): string {
+  return formatMoney(fromHalalas(BigInt(Math.round(value * 100))))
+}

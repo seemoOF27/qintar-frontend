@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError, api } from '@/api/client'
 import { draftQueue, type Draft } from './queue'
+import { supportSession } from '@/lib/supportSession'
 
 /**
  * يرفع المسودات حين تعود الشبكة.
@@ -18,6 +19,10 @@ export function useDraftSync() {
   const refresh = useCallback(() => setDrafts(draftQueue.all()), [])
 
   const sync = useCallback(async () => {
+    // **لا مزامنة داخل جلسة دعم.** الطابور في `localStorage` مشترك بين
+    // التبويبات، فمسودات موظف الدعم الشخصية كانت ستُرفع لحساب المستخدم.
+    if (supportSession.isActive()) return
+
     const pending = draftQueue.all().filter((draft) => draft.lastError === undefined)
 
     if (pending.length === 0 || !navigator.onLine) return

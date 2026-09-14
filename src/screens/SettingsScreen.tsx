@@ -12,6 +12,7 @@ const links = [
   { to: '/piggy-banks', label: 'الحصالات' },
   { to: '/funds', label: 'الاستثمار والطوارئ' },
   { to: '/debts', label: 'الديون' },
+  { to: '/cashback', label: 'بطاقتك مقابل صرفك' },
   { to: '/privacy', label: 'الخصوصية وبياناتي' },
   { to: '/audit', label: 'السجل' },
   { to: '/contact', label: 'تواصل معنا' },

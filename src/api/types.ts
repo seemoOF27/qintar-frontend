@@ -25,6 +25,22 @@ export interface User {
   currency: string
   salary_trigger_method: string | null
   salary_fixed_day: number | null
+  /**
+   * حالة قبول السياسة — **مستويان**.
+   *
+   * `minor_update` تحديث بسيط يُعرض ولا يمس الاستخدام، و`acceptance_required`
+   * تغيير جوهري يوقف كل شيء حتى يقبل.
+   */
+  policy_status: 'current' | 'minor_update' | 'acceptance_required'
+  policy_acceptance_required: boolean
+  policy_update_available: boolean
+}
+
+export interface LegalDocuments {
+  version: string
+  privacy_policy: string
+  terms_of_use: string
+  hash: string
 }
 
 export interface SalaryCycle {
@@ -149,6 +165,8 @@ export interface UserCard {
   bank_name: string
   last_four: string | null
   nickname: string | null
+  canonical_card_slug?: string | null
+  monthly_selection?: string[] | null
 }
 
 export interface Tag {
@@ -296,4 +314,61 @@ export interface ImpersonationRequest {
   session_started_at: string | null
   session_ended_at: string | null
   can_be_entered: boolean
+}
+
+/**
+ * محادثة «تواصل معنا».
+ *
+ * `author` «support» لا اسم موظف: المستخدم يحتاج أن يعرف أن الرد من الدعم،
+ * لا من في الفريق كتبه.
+ */
+export interface ContactThread {
+  id: number
+  type: 'issue' | 'suggestion' | 'inquiry'
+  status: 'open' | 'resolved'
+  message: string
+  unread_replies?: number
+  replies?: { id: number; author: 'user' | 'support'; body: string; created_at: string }[]
+  created_at: string
+}
+
+/** بيانات البطاقات المخزّنة، ومعها ما يفرض العقد عرضه. */
+export interface CashbackCatalog {
+  available: boolean
+  cards: import('@/vendor/card-adapter').ContractCard[]
+  categories: { key: string; label_ar: string; order: number }[]
+  schema_version: string | null
+  /** شارة المصدر: «بيانات البطاقات بتاريخ …» */
+  fetched_at: string | null
+  /** شارة التقادم بعد أسبوع، **مع سبب التعذّر** */
+  is_stale: boolean
+  last_attempted_at: string | null
+  last_failure: 'schema_invalid' | 'rate_limited' | 'server_error' | 'unreachable' | null
+}
+
+/**
+ * ملف صرف شهر تقويمي.
+ *
+ * `spend` **أعداد** كما يطلبها العقد والمحرك. وبقية المبالغ نصوص عشرية للعرض.
+ */
+export interface CashbackSpend {
+  month: string
+  spend: Record<import('@/vendor/cashback-engine').CategoryId, number>
+  total: Money
+  mapped: Money
+  coverage_percent: number
+  unmapped_budgets: { id: number; name: string; spent: Money }[]
+  uncategorised: Money
+  transaction_count: number
+}
+
+export interface CashbackMappings {
+  categories: { key: string; label_ar: string; order: number }[]
+  budgets: {
+    budget_id: number
+    name: string
+    canonical_category: string | null
+    confidence: number | null
+    suggestion: string | null
+  }[]
 }

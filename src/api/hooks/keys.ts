@@ -25,6 +25,7 @@ export const keys = {
   auditLogs: (filters: Record<string, unknown> = {}) => ['audit-logs', filters] as const,
 
   privacy: ['privacy'] as const,
+  legal: ['legal'] as const,
   consentText: (type: string) => ['consent-text', type] as const,
   impersonationRequests: ['impersonation-requests'] as const,
 

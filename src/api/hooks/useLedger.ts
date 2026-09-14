@@ -10,6 +10,7 @@ import type {
   UserCard,
 } from '@/api/types'
 import { draftQueue } from '@/lib/offline/queue'
+import { supportSession } from '@/lib/supportSession'
 import { keys, moneyTouchingKeys } from './keys'
 
 function useInvalidatingMutation<TInput, TResult>(fn: (input: TInput) => Promise<TResult>) {
@@ -55,7 +56,8 @@ export function useSaveTransaction() {
     mutationFn: async (input: Record<string, unknown> & { id?: number }) => {
       const { id, ...body } = input
 
-      if (id === undefined && !navigator.onLine) {
+      // ولا مسودة داخل جلسة دعم: الطابور مشترك مع حساب موظف الدعم الشخصي.
+      if (id === undefined && !navigator.onLine && !supportSession.isActive()) {
         return { queued: true as const, draft: draftQueue.add(body) }
       }
 
