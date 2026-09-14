@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { usePrivacy } from '@/context/PrivacyContext'
+import { usePrivacyDisplay } from '@/context/privacyDisplay'
 import { useLogout } from '@/api/hooks/useAuth'
 import { useDraftSync } from '@/lib/offline/useDraftSync'
 import { Notice } from '@/components/ui/Primitives'
@@ -21,7 +21,7 @@ const primary = [
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { hidden, toggle } = usePrivacy()
+  const { hidden, toggle } = usePrivacyDisplay()
   const logout = useLogout()
   const navigate = useNavigate()
   const { drafts, isSyncing, sync } = useDraftSync()
@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span>
                   {pending} مسودة بانتظار الاتصال. **لا تدخل في أي رقم** حتى تُحفظ.
                 </span>
-                <button type="button" onClick={() => void sync()} disabled={isSyncing}>
+                <button type="button" onClick={sync} disabled={isSyncing}>
                   {isSyncing ? 'يزامن…' : 'زامن الآن'}
                 </button>
               </span>

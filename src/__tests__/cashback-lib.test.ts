@@ -3,6 +3,7 @@ import { computeCard } from '@/vendor/cashback-engine'
 import type { CategoryId, Spend } from '@/vendor/cashback-engine'
 import type { ContractPayload } from '@/vendor/card-adapter'
 import payload from '@/vendor/card-payload.fixture.json'
+import { formatEngineAmount } from '@/lib/money'
 import { engineCards, isCompleteSelection, rankForSpend, selectionComparison, withFixedSelection } from '@/lib/cashback'
 
 /**
@@ -52,6 +53,19 @@ describe('الرقمان', () => {
 
     expect(selectionComparison(bsf, spend, bestOrder).lostMonthly).toBe(0)
     expect(selectionComparison(bsf, spend, worstOrder).lostMonthly).toBeGreaterThan(0)
+  })
+
+  /**
+   * **الأرقام الثلاثة تتطابق كما يراها المستخدم.** حالة حقيقية من بيانات مردود:
+   * ٥٧٫٠١٥ تُعرض ٥٧٫٠٢، والفرق الخام ١٢٦٫٠٣٥ كان يُعرض ١٢٦٫٠٤ لا ١٢٦٫٠٣.
+   */
+  it('الفرق يساوي طرح الرقمين المعروضين', () => {
+    const spend: Spend = { fuel: 600, dining: 0, delivery: 0, grocery: 1800.5, pharmacy: 0, travel: 0, education: 0, intl: 0, other: 0 }
+    const result = selectionComparison(bsf, spend, ['dining', 'grocery', 'travel', 'pharmacy', 'education'])
+
+    expect(formatEngineAmount(result.chosen.monthly)).toBe(formatEngineAmount(57.02))
+    expect(formatEngineAmount(result.best.monthly)).toBe(formatEngineAmount(183.05))
+    expect(result.lostMonthly).toBe(126.03)
   })
 
   it('التوزيع الصالح: كل فئات الاختيار، كلٌّ مرة', () => {

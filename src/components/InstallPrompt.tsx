@@ -43,13 +43,12 @@ function remember(): void {
 
 export function InstallPrompt({ always = false }: { always?: boolean }) {
   const [saved, setSaved] = useState<InstallPromptEvent | null>(null)
-  const [platform, setPlatform] = useState<Platform>('unsupported')
+  // تُحسب عند الإنشاء لا في تأثير: قيمة معروفة من البداية لا تحتاج رسمًا ثانيًا.
+  const [platform, setPlatform] = useState<Platform>(() => detectPlatform(null))
   const [hidden, setHidden] = useState(() => !always && wasDismissed())
   const [showSteps, setShowSteps] = useState(false)
 
   useEffect(() => {
-    setPlatform(detectPlatform(null))
-
     const onPrompt = (event: Event) => {
       // بلا هذا يفتح المتصفح نافذته وقتما شاء، غالبًا في أسوأ لحظة.
       event.preventDefault()

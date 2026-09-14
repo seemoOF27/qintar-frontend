@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import type { AutoAllocation } from '@/api/types'
 import { useAutoAllocations, useSaveAutoAllocations } from '@/api/hooks/useMoneyResources'
 import { Money } from '@/components/ui/Money'
 import { Button, Card, Field, MoneyInput, Notice, Select } from '@/components/ui/Primitives'
@@ -16,33 +17,42 @@ import { addMoney } from '@/lib/money'
  */
 export function FundsScreen() {
   const { data, isPending } = useAutoAllocations()
+
+  if (isPending) return <p className="text-[color:var(--color-ink-muted)]">لحظة…</p>
+
+  return <FundsForm data={data ?? []} />
+}
+
+/** قيم النموذج من الخادم، أو الافتراضية لمن لم يحفظ بعد. */
+function formFrom(data: AutoAllocation[]) {
+  const find = (type: string) => data.find((row) => row.type === type)
+  const investment = find('investment')
+  const emergency = find('emergency')
+
+  return {
+    investment: {
+      method: investment?.method ?? 'percentage',
+      value: investment?.value ?? '10.00',
+      surplus_share_percentage: investment?.surplus_share_percentage ?? '50.00',
+    },
+    emergency: {
+      method: emergency?.method ?? 'percentage',
+      value: emergency?.value ?? '5.00',
+      surplus_share_percentage: emergency?.surplus_share_percentage ?? '50.00',
+    },
+  }
+}
+
+/**
+ * النموذج يُنشأ **بعد** وصول البيانات، فيبدأ بقيمها.
+ *
+ * كان يبدأ بقيم افتراضية ثم ينسخ البيانات في تأثير حين تصل — فمن كتب رقمًا
+ * قبل وصولها يُمحى ما كتبه بلا إشعار، وكل حفظ يعيد جلبًا يعيد الكتابة فوق
+ * النموذج.
+ */
+function FundsForm({ data }: { data: AutoAllocation[] }) {
   const save = useSaveAutoAllocations()
-
-  const [form, setForm] = useState({
-    investment: { method: 'percentage', value: '10', surplus_share_percentage: '50' },
-    emergency: { method: 'percentage', value: '5', surplus_share_percentage: '50' },
-  })
-
-  useEffect(() => {
-    if (data === undefined || data.length === 0) return
-
-    const find = (type: string) => data.find((row) => row.type === type)
-    const investment = find('investment')
-    const emergency = find('emergency')
-
-    setForm({
-      investment: {
-        method: investment?.method ?? 'percentage',
-        value: investment?.value ?? '10.00',
-        surplus_share_percentage: investment?.surplus_share_percentage ?? '50.00',
-      },
-      emergency: {
-        method: emergency?.method ?? 'percentage',
-        value: emergency?.value ?? '5.00',
-        surplus_share_percentage: emergency?.surplus_share_percentage ?? '50.00',
-      },
-    })
-  }, [data])
+  const [form, setForm] = useState(() => formFrom(data))
 
   const error = save.error instanceof ApiError ? save.error : null
 
@@ -59,9 +69,7 @@ export function FundsScreen() {
     totalValid = false
   }
 
-  if (isPending) return <p className="text-[color:var(--color-ink-muted)]">لحظة…</p>
-
-  const balanceOf = (type: string) => data?.find((row) => row.type === type)?.current_balance ?? '0.00'
+  const balanceOf = (type: string) => data.find((row) => row.type === type)?.current_balance ?? '0.00'
 
   return (
     <div className="flex flex-col gap-[var(--space-4)]">

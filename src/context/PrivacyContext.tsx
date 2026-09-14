@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { PrivacyDisplayContext } from './privacyDisplay'
 
 /**
  * إخفاء الأرقام الحسّاسة.
@@ -11,13 +12,6 @@ import type { ReactNode } from 'react'
  * نفسها فتبقى ظاهرة دائمًا — إخفاؤها يجعل الشاشة بلا فائدة.
  */
 const STORAGE_KEY = 'qintar.hideFigures'
-
-interface PrivacyValue {
-  hidden: boolean
-  toggle: () => void
-}
-
-const PrivacyContext = createContext<PrivacyValue>({ hidden: false, toggle: () => {} })
 
 export function PrivacyProvider({ children }: { children: ReactNode }) {
   const [hidden, setHidden] = useState(() => {
@@ -39,9 +33,5 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   const toggle = useCallback(() => setHidden((value) => !value), [])
   const value = useMemo(() => ({ hidden, toggle }), [hidden, toggle])
 
-  return <PrivacyContext value={value}>{children}</PrivacyContext>
-}
-
-export function usePrivacy(): PrivacyValue {
-  return useContext(PrivacyContext)
+  return <PrivacyDisplayContext value={value}>{children}</PrivacyDisplayContext>
 }

@@ -97,7 +97,13 @@ export function selectionComparison(card: Card, spend: Spend, order: CategoryId[
   const best: CardResult = computeCard(card, spend)
   const chosen: CardResult = computeCard(withFixedSelection(card, order), spend)
 
-  return { best, chosen, lostMonthly: Math.max(0, best.monthly - chosen.monthly) }
+  // **الفرق من الرقمين المعروضين لا من العددين الخامين.** العرض يقرّب كلًّا
+  // إلى الهللة، وتقريب الفرق وحده يعطي هللة زائدة: ١٨٣٫٠٥ − ٥٧٫٠٢ ظهرت
+  // ١٢٦٫٠٤ على بيانات مردود الحية، والمستخدم يطرح بنفسه فيرى رقمًا لا يطابق.
+  const halalas = (value: number) => Math.round(value * 100)
+  const lostMonthly = Math.max(0, halalas(best.monthly) - halalas(chosen.monthly)) / 100
+
+  return { best, chosen, lostMonthly }
 }
 
 /** هل التوزيع المحفوظ صالح لهذه البطاقة؟ كل فئات الاختيار، كلٌّ مرة واحدة. */

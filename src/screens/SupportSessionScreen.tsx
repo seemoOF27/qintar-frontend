@@ -14,23 +14,21 @@ import { Card, Notice } from '@/components/ui/Primitives'
  * واحدة — فالمرة الثانية تفشل وتُظهر خطأً كاذبًا لولا المرجع.
  */
 export function SupportSessionScreen() {
-  const [failure, setFailure] = useState<string | null>(null)
+  // **يُقرأ الرمز عند الإنشاء**، قبل أن يمحوه التأثير من العنوان.
+  const [code] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('code'))
+  const [failure, setFailure] = useState<string | null>(() =>
+    code === null ? 'الرابط ناقص. افتحه من لوحة الأدمن من جديد.' : null,
+  )
   const started = useRef(false)
 
   useEffect(() => {
     if (started.current) return
     started.current = true
 
-    const code = new URLSearchParams(window.location.hash.slice(1)).get('code')
-
-    // يُمحى الرمز من العنوان والسجل قبل أي شيء.
+    // يُمحى الرمز من العنوان والسجل قبل أي طلب.
     window.history.replaceState(null, '', '/support-session')
 
-    if (code === null) {
-      setFailure('الرابط ناقص. افتحه من لوحة الأدمن من جديد.')
-
-      return
-    }
+    if (code === null) return
 
     api
       .post<{ request: ImpersonationRequest; token: string; expires_at: string }>(
@@ -45,7 +43,7 @@ export function SupportSessionScreen() {
       .catch((error: unknown) =>
         setFailure(error instanceof ApiError ? error.message : 'تعذّر فتح الجلسة.'),
       )
-  }, [])
+  }, [code])
 
   return (
     <div className="grid min-h-dvh place-items-center p-[var(--space-4)]">

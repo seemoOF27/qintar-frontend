@@ -1,5 +1,5 @@
 import { formatMoney, isNegative } from '@/lib/money'
-import { usePrivacy } from '@/context/PrivacyContext'
+import { usePrivacyDisplay } from '@/context/privacyDisplay'
 
 interface MoneyProps {
   amount: string
@@ -31,7 +31,7 @@ const toneClass = {
  * حُذف من الخلفية كلها.
  */
 export function Money({ amount, sensitive = false, size = 'body', tone = 'default' }: MoneyProps) {
-  const { hidden } = usePrivacy()
+  const { hidden } = usePrivacyDisplay()
   const negative = isNegative(amount)
 
   const resolvedTone = tone === 'default' && negative ? 'danger' : tone
