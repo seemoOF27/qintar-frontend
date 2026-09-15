@@ -7,6 +7,7 @@
     "dev": "node scripts/build-tokens.mjs && vite",
     "build": "node scripts/build-tokens.mjs && tsc -b && vite build",
     "preview": "vite preview",
+    "phone": "node scripts/build-tokens.mjs && node scripts/phone.mjs",
     "test": "vitest run",
     "lint": "oxlint src",
     "tokens": "node scripts/build-tokens.mjs",

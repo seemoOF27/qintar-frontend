@@ -6,6 +6,7 @@ import type { CashbackCatalog, CashbackSpend, UserCard } from '@/api/types'
 import { Button, Card, EmptyState, Field, Notice, Select } from '@/components/ui/Primitives'
 import { formatEngineAmount, formatMoney } from '@/lib/money'
 import {
+  cardFacts,
   engineCards,
   isCompleteSelection,
   monthlySelectionOf,
@@ -125,7 +126,7 @@ function CashbackFeature() {
 
       {catalog.data?.available === true && spend.data !== undefined && (
         <>
-          <Comparison cards={cards} spend={spend.data.spend} />
+          <Comparison cards={cards} catalog={catalog.data} spend={spend.data.spend} />
           <MyCards cards={cards} catalog={catalog.data} month={month} spend={spend.data.spend} />
         </>
       )}
@@ -181,9 +182,15 @@ function Coverage({ spend }: { spend: CashbackSpend }) {
         </p>
       )}
 
-      {spend.transaction_count === 0 && (
+      {spend.transaction_count === 0 ? (
         <p className="mt-[var(--space-1)] text-[length:var(--text-caption)] text-[color:var(--color-ink-muted)]">
           ما فيه مصروفات في هذا الشهر.
+        </p>
+      ) : (
+        /* المؤشر الثاني: «كم كسبت فعلًا» يرى المسند لبطاقة وحده. */
+        <p className="mt-[var(--space-1)] text-[length:var(--text-caption)]">
+          مسند لبطاقة منه {spend.card_assigned_percent}٪ ({spend.card_assigned_count} من {spend.transaction_count} عملية).
+          {spend.card_assigned_percent < 100 && ' الباقي ما يدخل في «كم كسبت فعلًا» لأي بطاقة.'}
         </p>
       )}
     </Card>
@@ -264,14 +271,18 @@ function Mappings() {
 }
 
 /** «لو صرفت كل شيء بهذه» — 0005 §١٣.٧: المقارنة أولًا. */
-function Comparison({ cards, spend }: { cards: EngineCard[]; spend: Spend }) {
+function Comparison({ cards, catalog, spend }: { cards: EngineCard[]; catalog: CashbackCatalog; spend: Spend }) {
   const ranked = useMemo(() => rankForSpend(cards, spend), [cards, spend])
+  const sourceOf = (slug: string) => catalog.cards.find((card) => card.slug === slug)
 
   return (
     <section className="flex flex-col gap-[var(--space-2)]">
       <h2 className="font-semibold">لو صرفت كل شيء ببطاقة واحدة</h2>
 
-      {ranked.map((result, index) => (
+      {ranked.map((result, index) => {
+        const facts = cardFacts(sourceOf(result.card.id))
+
+        return (
         <Card key={result.card.id}>
           <div className="flex items-baseline justify-between gap-[var(--space-2)]">
             <span className="font-semibold">
@@ -301,10 +312,24 @@ function Comparison({ cards, spend }: { cards: EngineCard[]; spend: Spend }) {
             </p>
           )}
 
+          {facts.bonus !== null && (
+            <p className="mt-[var(--space-1)] text-[length:var(--text-caption)]">
+              مكافأة تسجيل: {facts.bonus.label_ar}
+              {facts.bonus.validUntil !== undefined && ` · حتى ${dateOnly(facts.bonus.validUntil)}`} — خارج الرقم أعلاه.
+            </p>
+          )}
+
+          {facts.unknown.length > 0 && (
+            <p className="mt-[var(--space-1)] text-[length:var(--text-caption)] text-[color:var(--color-state-warning)]">
+              ما نشرها البنك: {facts.unknown.join('، ')}. فالرقم قد لا يعكسها.
+            </p>
+          )}
+
           {/* **بجانب كل نتيجة** لا في التذييل وحده — العقد. */}
           <p className="mt-[var(--space-2)] text-[length:var(--text-caption)] text-[color:var(--color-ink-muted)]">{DISCLAIMER}</p>
         </Card>
-      ))}
+        )
+      })}
     </section>
   )
 }

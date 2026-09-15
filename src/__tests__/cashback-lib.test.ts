@@ -4,7 +4,7 @@ import type { CategoryId, Spend } from '@/vendor/cashback-engine'
 import type { ContractPayload } from '@/vendor/card-adapter'
 import payload from '@/vendor/card-payload.fixture.json'
 import { formatEngineAmount } from '@/lib/money'
-import { engineCards, isCompleteSelection, rankForSpend, selectionComparison, withFixedSelection } from '@/lib/cashback'
+import { cardFacts, engineCards, isCompleteSelection, rankForSpend, selectionComparison, withFixedSelection } from '@/lib/cashback'
 
 /**
  * طبقة الكاش باك فوق المحرك.
@@ -97,5 +97,20 @@ describe('الترتيب', () => {
 
     expect(fxOf(withIntl).finalMonthly).toBeLessThan(fxOf(withIntl).monthly)
     expect(fxOf(without).finalMonthly).toBe(fxOf(without).monthly)
+  })
+})
+
+describe('ما يُعرض ولا يُحسب', () => {
+  it('المكافأة والحقول غير المنشورة بأسماء مفهومة', () => {
+    const source = (payload as unknown as ContractPayload).cards[0]
+    const facts = cardFacts({
+      ...source,
+      signupBonus: { type: 'cashback', value: 300, label_ar: '٣٠٠ ريال', sourceUrl: 'https://example.com', verifiedAt: '2026-09-01' },
+      unknown: { fxFeePercent: '', capReset: 'لم يُنشر' },
+    })
+
+    expect(facts.bonus?.label_ar).toBe('٣٠٠ ريال')
+    expect(facts.unknown).toEqual(['رسوم العمليات الدولية', 'موعد تصفير السقوف'])
+    expect(cardFacts(undefined)).toEqual({ bonus: null, unknown: [] })
   })
 })

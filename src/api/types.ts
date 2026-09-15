@@ -329,6 +329,8 @@ export interface ContactThread {
   message: string
   unread_replies?: number
   replies?: { id: number; author: 'user' | 'support'; body: string; created_at: string }[]
+  /** بلا اسم الملف الأصلي — الخادم لا يحفظه */
+  attachments?: { id: number; kind: 'image' | 'pdf'; size_bytes: number }[]
   created_at: string
 }
 
@@ -360,6 +362,10 @@ export interface CashbackSpend {
   unmapped_budgets: { id: number; name: string; spent: Money }[]
   uncategorised: Money
   transaction_count: number
+  /** المؤشر الثاني: المسند لبطاقة — «كم كسبت فعلًا» لا يرى غيره */
+  card_assigned: Money
+  card_assigned_percent: number
+  card_assigned_count: number
 }
 
 export interface CashbackMappings {

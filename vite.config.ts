@@ -27,6 +27,10 @@ export default defineConfig({
    * وiOS لا يثبّت تطبيقًا من أصلين.
    */
   server: {
+    // **للتجربة على الجوال وحدها.** Vite يرفض أي اسم مضيف غير محلي، فنفق
+    // Cloudflare المؤقت يُردّ بـ«Blocked request» — docs/deploy.md. عناوين IP
+    // على الشبكة المحلية مسموحة أصلًا.
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': {
         target: process.env.VITE_API_TARGET ?? 'http://127.0.0.1:8000',

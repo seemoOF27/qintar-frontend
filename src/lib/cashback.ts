@@ -9,7 +9,7 @@ import type {
   RateConfig,
   Spend,
 } from '@/vendor/cashback-engine'
-import { toEngineCards, type ContractCard } from '@/vendor/card-adapter'
+import { toEngineCards, type ContractCard, type SignupBonus } from '@/vendor/card-adapter'
 
 /**
  * طبقة فوق المحرك المنسوخ — **لا تعدّله ولا تعيد حسابًا يحسبه**.
@@ -117,4 +117,33 @@ export function isCompleteSelection(card: Card, order: string[] | null | undefin
     new Set(order).size === order.length &&
     order.every((category) => mechanism.selectable.includes(category as CategoryId))
   )
+}
+
+/** الحقول التي تمس الحساب إن غابت — بأسماء يفهمها المستخدم. */
+const UNKNOWN_LABELS: Record<string, string> = {
+  fxFeePercent: 'رسوم العمليات الدولية',
+  totalMonthlyCap: 'السقف الشهري الإجمالي',
+  feeWaiverAnnualSpend: 'شرط الإعفاء من الرسوم',
+  capReset: 'موعد تصفير السقوف',
+  cashbackPayout: 'طريقة صرف الكاش باك',
+  minSalary: 'الحد الأدنى للراتب',
+  aprPercent: 'نسبة الربح السنوية',
+  isIslamic: 'التوافق مع الشريعة',
+}
+
+/**
+ * ما يُعرض بجانب النتيجة **ولا يدخلها**.
+ *
+ * - **مكافأة التسجيل** خارج الرقم: تُصرف مرة بشروطها، وجمعها مع كسب شهري
+ *   يضخّم البطاقة في سنتها الأولى ويخفيه ما بعدها.
+ * - **ما لم تنشره الجهة** يُسمّى صراحةً: العقد يفرّق بين «بحثنا ولم نجد» و«لم
+ *   يُبحث»، والأول يُقال للمستخدم لا يُسكت عنه.
+ */
+export function cardFacts(source: ContractCard | undefined): { bonus: SignupBonus | null; unknown: string[] } {
+  if (source === undefined) return { bonus: null, unknown: [] }
+
+  return {
+    bonus: source.signupBonus ?? null,
+    unknown: Object.keys(source.unknown ?? {}).map((field) => UNKNOWN_LABELS[field] ?? field),
+  }
 }

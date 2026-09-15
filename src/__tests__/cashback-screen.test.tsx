@@ -60,6 +60,9 @@ const spendProfile = {
   unmapped_budgets: [{ id: 3, name: 'ملابس', spent: '1000.00' }],
   uncategorised: '0.00',
   transaction_count: 12,
+  card_assigned: '1000.00',
+  card_assigned_percent: 25,
+  card_assigned_count: 3,
 }
 
 function renderScreen() {
@@ -128,6 +131,36 @@ describe('بعد الموافقة', () => {
     const section = heading.closest('section')!
 
     expect(within(section).getAllByText(/تقديري ومبني على شروط منشورة/)).toHaveLength(7)
+  })
+})
+
+describe('ما يُعرض ولا يُحسب', () => {
+  /** **المؤشر الثاني** ومكافأة التسجيل وما لم ينشره البنك — ظاهرة لا صامتة. */
+  it('يعرض المسند لبطاقة، والمكافأة، والحقول غير المنشورة', async () => {
+    const cards = payload.cards.map((card, index) =>
+      index === 0
+        ? {
+            ...card,
+            signupBonus: { type: 'cashback', value: 300, label_ar: '٣٠٠ ريال عند أول صرف', sourceUrl: 'https://example.com', verifiedAt: '2026-09-01' },
+            unknown: { fxFeePercent: '' },
+          }
+        : card,
+    )
+
+    serve({
+      '/cashback/cards': catalog({ cards }),
+      '/cashback/spend': spendProfile,
+      '/cashback/mappings': { categories: payload.categories, budgets: [] },
+      '/user-cards': [],
+      '/privacy': privacy(true),
+    })
+
+    renderScreen()
+
+    expect(await screen.findByText(/مسند لبطاقة منه 25٪ \(3 من 12 عملية\)/)).toBeInTheDocument()
+    expect(await screen.findByText(/مكافأة تسجيل: ٣٠٠ ريال عند أول صرف/)).toBeInTheDocument()
+    expect(screen.getByText(/خارج الرقم أعلاه/)).toBeInTheDocument()
+    expect(screen.getByText(/ما نشرها البنك: رسوم العمليات الدولية/)).toBeInTheDocument()
   })
 })
 
